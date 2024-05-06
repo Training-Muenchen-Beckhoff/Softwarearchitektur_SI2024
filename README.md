@@ -1,2 +1,2 @@
-# Softwarearchitektur_SI2024
+# Softwarearchitektur & Testing
 Softwarearchitektur &amp; Testing Systemintegratoren 2024
