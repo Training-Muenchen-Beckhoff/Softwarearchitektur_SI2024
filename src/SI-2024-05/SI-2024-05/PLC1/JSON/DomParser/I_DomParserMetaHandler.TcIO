@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <Itf Name="I_DomParserMetaHandler" Id="{cb6b0316-eff5-4e18-b4e6-829493b9ad41}">
+    <Declaration><![CDATA[INTERFACE I_DomParserMetaHandler
+]]></Declaration>
+    <Property Name="BatteryVoltage" Id="{891624a3-ed20-49cb-93fd-b7ac8971e6fd}">
+      <Declaration><![CDATA[PROPERTY BatteryVoltage : DINT]]></Declaration>
+      <Get Name="Get" Id="{71e7e9a5-5053-4bb4-b52c-7bcebbfa8432}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Method Name="Clear" Id="{6acb230c-bba3-4d4b-bb76-04fe94c7dba6}">
+      <Declaration><![CDATA[METHOD Clear : HRESULT
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="ClickType" Id="{20eb8292-e74c-46c5-80ec-73336137b901}">
+      <Declaration><![CDATA[PROPERTY ClickType : STRING]]></Declaration>
+      <Get Name="Get" Id="{77888fd4-99a3-4a50-b523-dbcb12f15c90}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="MetaData" Id="{139748d3-0bf4-4c86-bec8-b7cb46bef87a}">
+      <Declaration><![CDATA[PROPERTY MetaData : REFERENCE to ST_MetaData]]></Declaration>
+      <Get Name="Get" Id="{f2da454b-c965-4260-b0b0-a9dabc1aa3b7}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="SensorValue1" Id="{bc6fb126-eb6d-41ca-87f9-e4c0bbda08aa}">
+      <Declaration><![CDATA[PROPERTY SensorValue1 : DINT]]></Declaration>
+      <Get Name="Get" Id="{172fdcb2-4d58-49cc-89ed-bb4194627e25}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="VoltageUnit" Id="{0740b30e-9e04-48bb-ade2-d35d3d7830e3}">
+      <Declaration><![CDATA[PROPERTY VoltageUnit : STRING]]></Declaration>
+      <Get Name="Get" Id="{856c83ac-5bea-4d64-a831-dbd1464330e9}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+  </Itf>
+</TcPlcObject>

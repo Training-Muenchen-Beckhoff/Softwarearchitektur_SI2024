@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="OperatorOverloading_Test" Id="{a74511a3-d9f6-46e3-897e-3c8d4ccc4c75}" SpecialFunc="None">
+    <Declaration><![CDATA[
+// Lib: Tc2_Math
+
+PROGRAM OperatorOverloading_Test
+VAR
+	bDoubleSquareScal, bAddVec, bCrossProd, bScaleVec : BOOL;
+	eError : E_OperatorError;
+	fbScalar : FB_Scalar(2.2);
+	fbVector1 : FB_Vector(1,2,3);
+	fbVector2 : FB_Vector(3,2,1);
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+// Direkt
+IF bDoubleSquareScal THEN 
+	bDoubleSquareScal := FALSE;
+	fbScalar.Times(fbScalar.Plus(fbScalar));
+	END_IF
+
+IF bAddVec THEN
+	bAddVec := FALSE;
+	fbVector1.Plus(fbVector2);
+	END_IF
+	
+IF bCrossProd THEN
+	bCrossProd := FALSE;
+	fbVector1.Times(fbVector2);
+	END_IF
+	
+IF bScaleVec THEN
+	bScaleVec := FALSE;
+	fbVector1.Times(fbScalar);
+	END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="OperatorOverloading_Test">
+      <LineId Id="3" Count="21" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

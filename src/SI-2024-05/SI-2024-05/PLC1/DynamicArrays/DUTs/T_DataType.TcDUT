@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="T_DataType" Id="{11f982fd-c627-41e6-852b-5da396a9cbcb}">
+    <Declaration><![CDATA[TYPE T_DataType : PVOID; END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

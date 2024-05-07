@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="Globale_Definitionen" Id="{b9e8fdb6-aa86-4000-afcd-e97eedabd6fd}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL
+	FileName: STRING := 'C:\TwinSAFE\TestErgebnisse\EL1904\TestLog_EL1904_';
+	StartUp_Wait_Time: TIME := t#3s;
+	ShutDown_Wait_Time : TIME := T#1S;
+	Kamera_Wait_Time: TIME := T#2S;
+	Prisma_Wait_Time:  TIME := T#3S;
+	Seriell_Wait_Time: TIME := T#1S;
+	KameraBeleuchtungFaktorWarteZeit:UINT:=8;
+	Kopfzeile: STRING(255);
+	TesterArray: ARRAY[0..7] OF STRING ;
+	EtherCATAmsNetID: T_AmsNetId := '172.16.3.218.2.1';
+	EL1904port: T_AmsPort := 1024;
+	EL6900port: T_AmsPort := 1010;
+	OutputWait_Time: TIME := t#5s;
+	Color_Rot : DWORD := 16#000000FF;
+	Color_Gruen : DWORD := 16#00007F00;
+	Color_Weiss : DWORD := 16#00FFFFFF;
+	Color_Visu : DWORD := 16#00FFFFFF;
+	VoltagePowerContacts20Vunder : UINT := 21300; (* 0V = 0, 30V = 32767  1092 pro Volt  20V = 21845*)
+	VoltagePowerContacts20Vover : UINT := 22300; (* 0V = 0, 30V = 32767  1092 pro Volt  20V = 21845*)
+	VoltagePowerContacts24Vunder : UINT := 25900; (* 0V = 0, 30V = 32767  1092 pro Volt  24V = 26213*)
+	VoltagePowerContacts24Vover : UINT := 26700; (* 0V = 0, 30V = 32767  1092 pro Volt  24V = 26213*)
+	VoltagePowerContacts30Vunder : UINT := 32200; (* 0V = 0, 30V = 32767  1092 pro Volt  30V = 32767*)
+	VoltagePowerContacts30Vover : UINT := 32767; (* 0V = 0, 30V = 32767  1092 pro Volt  30V = 32767*)
+	LogFileSerialNumber: UDINT;
+	Artikel : UDINT := 70931;
+//	SafetyProg1: T_MaxString := 'C:\TwinSAFE\Programm\EL\Automated_EL1904\1_SafetyProgramCRC';
+//	SafetyCRC1: WORD := 17617;
+	SafetyProg65534: T_MaxString := 'C:\TwinSAFE\Programm\EL\Automated_EL1904\65534_SafetyProgramCRC';
+	SafetyCRC65534: WORD := 65346;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

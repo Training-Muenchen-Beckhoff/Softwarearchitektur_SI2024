@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="Globale_Kamera_Variablen" Id="{6ff8d270-c239-4ec8-ad52-5937283f7838}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	//TestVariablen
+	bStopStepPrismaDetection:BOOL:=FALSE;
+	bStopStepAllLedOn:BOOL:=FALSE;
+	bEinrichtBetrieb:BOOL:=FALSE;
+	bNextStepEinrichtbetrieb:BOOL:=FALSE;
+	bPrismaOk:BOOL:=FALSE;
+	bPrismaNotOK:BOOL:=FALSE;
+	
+	//Kamera aktiv
+	bKameraAktiv:BOOL:=TRUE;
+	
+	//erkannte LEDs
+	bLED_TermXOn		: ARRAY  [1..8] OF LED1904;
+	iDetectedLED			: INT:=0;
+	iStartDetectedLED		: INT:=1;
+	
+	// Color Simularity
+//	aRefColor					:	TcVnPoint3_LREAL;
+//	aRefColorGreen				:	TcVnPoint3_LREAL	:= [130, 230, 0];
+//	aRefColorRed				:	TcVnPoint3_LREAL	:= [255, 255, 255];
+//	aRefColorPrismError			:	TcVnPoint3_LREAL	:= [135, 150, 105];
+//	fVariance					:	REAL := 0.10;
+//	fLuminanceWeight			:	REAL := 0.1;
+  stColorSimularity : ST_ColorSimularity;
+  
+  
+	
+	//Threshold
+  stThreshold : ST_ThresholdData; 
+  stThresholdGreenLed : ST_ThresholdData := (fThreshold := 10, fMaxValue := 255); 
+  stThresholdRedLed : ST_ThresholdData := (fThreshold := 15, fMaxValue := 255); 
+  stThresholdPrism : ST_ThresholdData := (fThreshold := 185, fMaxValue := 255); 
+	
+	//Konturen zeichnen
+  stConture : ST_Conture := (fAreaMin := 1200,fAreaMax := 3000, fHeightMin := 30, fHeightMax := 70, fWidthMax:= 70 );
+  stContureLED : ST_Conture := (fAreaMin := 1200,fAreaMax := 3000, fHeightMin := 30, fHeightMax := 70, fWidthMax:= 90 );
+  stConturePrisma : ST_Conture := (fAreaMin := 450,fAreaMax := 900, fHeightMin := 20, fHeightMax := 70, fWidthMax:= 70 );
+	
+	// Positionsgrenzen
+//	uiLowerPosDeviation:UINT:=10;
+//	uiUpperPosDeviation:UINT:=10;
+//	aCenterReferenceCoordinatesXY	: ARRAY  [1..8] OF TcVnPoint2_REAL;
+//	CenterXPosInput1:REAL:=46;
+//	CenterYPosInput1:REAL:=36;
+//	CenterXPosInput2:REAL:=119;
+//	CenterYPosInput2:REAL:=33;
+//	CenterXPosInput3:REAL:=46;
+//	CenterYPosInput3:REAL:=87;
+//	CenterXPosInput4:REAL:=120;
+//	CenterYPosInput4:REAL:=87;
+//	CenterXPosDiag1:REAL:=46;
+//	CenterYPosDiag1:REAL:=139;
+//	CenterXPosDiag2:REAL:=114;
+//	CenterYPosDiag2:REAL:=137;
+//	CenterXPosDiag3:REAL:=45;
+//	CenterYPosDiag3:REAL:=192;
+//	CenterXPosDiag4:REAL:=124;
+//	CenterYPosDiag4:REAL:=192;
+  
+  stPositionBounds : ST_PositionBounds;
+
+
+//PositionBounds.aCenterPosition[1].Diagnose.X
+  
+  
+	// Region of Interrest
+	nXposPrisma			:	UDINT:=1514;
+	nYposPrisma			:	UDINT:=892;
+	nROIWidth			:	UDINT:=170;
+	nROIHeight			:	UDINT:=220;
+	
+	// Beleuchtung EL2595
+	bLedOn AT%Q* :BOOL;
+	uiOutputCurrent AT%Q*:UINT;
+	bLedReset AT%Q*:BOOL;
+	bLedWarning AT%I*:BOOL;
+	bLedError AT%I*:BOOL;	
+	uiOutputCurrentEinrichtbertieb:UINT:=300;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

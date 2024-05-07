@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="LED1904" Id="{245ae082-18ae-4aa2-87b3-852f6edeab84}">
+    <Declaration><![CDATA[TYPE LED1904 :
+STRUCT
+	bInput1:BOOL;
+	bInput2:BOOL;
+	bInput3:BOOL;
+	bInput4:BOOL;
+	bDiag1:BOOL;
+	bDiag2:BOOL;
+	bDiag3:BOOL;
+	bDiag4:BOOL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

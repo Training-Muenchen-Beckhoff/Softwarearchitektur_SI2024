@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <Itf Name="IDynamicArray" Id="{f2b20f95-f8a3-4565-ac5d-493b5a4bd0d6}">
+    <Declaration><![CDATA[INTERFACE IDynamicArray
+]]></Declaration>
+    <Method Name="Access" Id="{d07b189b-2574-4f13-8cb3-3854674aec78}">
+      <Declaration><![CDATA[METHOD Access : T_DataType
+VAR_INPUT
+	nPosition : DINT;  // Position of element in dynamic array, 0 indexed.
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Clear" Id="{111472b3-30bd-47e4-b795-cb460f5369b9}">
+      <Declaration><![CDATA[METHOD PUBLIC Clear
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Insert" Id="{83b789c8-f84e-4d21-8d48-ce7289adf6d1}">
+      <Declaration><![CDATA[METHOD PUBLIC Insert
+VAR_INPUT
+	Data : T_DataType; // Data to insert in dynamic array.
+	nPosition : DINT; // Position to insert data at in the dynamic array, 0 indexed. 
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="IsEmpty" Id="{c07a75c0-ca76-49f8-8da9-5621ef4a72ed}">
+      <Declaration><![CDATA[METHOD PUBLIC IsEmpty : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Resize" Id="{27fb678c-0862-4a99-bf77-38f4e62a35e0}">
+      <Declaration><![CDATA[METHOD PUBLIC Resize : BOOL
+VAR_INPUT
+	nLength 		: DINT; // New length of dynamic array.
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Show" Id="{583f344f-3887-481b-84a2-46dbd2ff74d3}">
+      <Declaration><![CDATA[METHOD PUBLIC Show
+VAR_IN_OUT
+	aList : ARRAY[*] OF T_DataType; // Static array to display data in dynamic array.
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Size" Id="{28f221ac-c0f5-4908-b1e3-a6f26696b59a}">
+      <Declaration><![CDATA[METHOD PUBLIC Size : DINT
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>

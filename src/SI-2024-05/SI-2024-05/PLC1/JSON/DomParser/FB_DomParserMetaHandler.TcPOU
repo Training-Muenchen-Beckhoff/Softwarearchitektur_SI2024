@@ -1,0 +1,398 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_DomParserMetaHandler" Id="{684de193-3edc-4795-944f-987f79853fda}" SpecialFunc="None">
+    <Declaration><![CDATA[//{attribute 'hide_all_locals'}
+{attribute 'c++_compatible'}
+FUNCTION_BLOCK PUBLIC FB_DomParserMetaHandler IMPLEMENTS ITcJsonSaxValues, I_DomParserMetaHandler
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+  // Properties
+  _batteryVoltage : DINT;
+  _voltageUnit : STRING;
+  _clickType : STRING;
+  _sensorValue1 : DINT;
+  _metaData : ST_MetaData;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="IDomParserMetaHandler" Id="{81f1bd59-ac55-4ae7-aa54-73449aba8886}" />
+    <Folder Name="ITcJsonSaxValues" Id="{4dd7f120-f68d-4a77-9cb7-4d7c64470fd5}" />
+    <Folder Name="Private" Id="{3d8c6caf-cc6e-410d-9304-b241fe4d823b}" />
+    <Property Name="BatteryVoltage" Id="{cf5d4a14-44e7-47f3-92f7-93a7a0738d3c}" FolderPath="IDomParserMetaHandler\">
+      <Declaration><![CDATA[{warning 'Eigenschaftenimplementierung hinzufügen'}
+PROPERTY BatteryVoltage : DINT
+]]></Declaration>
+      <Get Name="Get" Id="{302f6583-30c2-46aa-86b5-8a41430327e0}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+BatteryVoltage := THIS^._batteryVoltage;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="Clear" Id="{1ebaeee9-c078-4329-8b8a-237949793774}" FolderPath="IDomParserMetaHandler\">
+      <Declaration><![CDATA[
+METHOD Clear : HRESULT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+THIS^._batteryVoltage := 0;
+THIS^._sensorValue1 := 0;
+THIS^._clickType := '';
+THIS^._voltageUnit := '';
+
+Clear := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="ClickType" Id="{d4874886-1313-4a10-ace2-dae6ca24dd44}" FolderPath="IDomParserMetaHandler\">
+      <Declaration><![CDATA[
+PROPERTY ClickType : STRING
+]]></Declaration>
+      <Get Name="Get" Id="{13e718b8-9b03-47fa-8133-e798490625be}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+ClickType := THIS^._clickType;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="MetaData" Id="{3efcdea8-bb74-442f-9050-e121c2a0f60b}" FolderPath="IDomParserMetaHandler\">
+      <Declaration><![CDATA[
+PROPERTY MetaData : REFERENCE TO ST_MetaData
+]]></Declaration>
+      <Get Name="Get" Id="{a7ee1a0b-26bc-4eda-8800-8291d86c539f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+MetaData REF= _metaData;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="OnBoolValue" Id="{6cfff086-e91a-4e19-9890-cfa6270eac2c}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnBoolValue : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: POINTER TO TcJsonLevelInfo;
+	value	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+AdsLogMessage('OnBoolValue');
+
+OnBoolValue := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnDintValue" Id="{161d7aa0-32d6-48d4-938a-52cc2147badf}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnDintValue : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: POINTER TO TcJsonLevelInfo;
+	value	: DINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+AdsLogMessage('OnDintValue');
+
+OnDintValue := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnLintValue" Id="{bb981d14-509c-4568-972c-e97207607d60}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnLintValue : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: POINTER TO TcJsonLevelInfo;
+	value	: LINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+AdsLogMessage('OnLintValue');
+
+OnLintValue := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnLrealValue" Id="{60b2fc07-3a44-439c-89fd-815208c284fd}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnLrealValue : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: POINTER TO TcJsonLevelInfo;
+	value	: LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+AdsLogMessage('OnLrealValue');
+
+OnLrealValue := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnNullValue" Id="{fdd9f04d-2ebb-483b-b4ea-648f6731695a}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnNullValue : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: POINTER TO TcJsonLevelInfo;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+AdsLogMessage('OnNullValue');
+
+OnNullValue := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnRawNumberValue" Id="{b530f586-d475-495c-ad5c-fec5b5808863}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnRawNumberValue : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: POINTER TO TcJsonLevelInfo;
+END_VAR
+VAR_IN_OUT CONSTANT
+	value	: STRING;
+END_VAR
+VAR_INPUT
+	len	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+AdsLogMessage('OnRawNumberValue');
+
+OnRawNumberValue := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnStringValue" Id="{20074159-d58a-4d4a-907f-6ad68dd64d6a}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnStringValue : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: POINTER TO TcJsonLevelInfo;
+END_VAR
+VAR_IN_OUT CONSTANT
+	value	: STRING;
+END_VAR
+VAR_INPUT
+	len	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+AdsLogMessage('OnStringValue');
+
+SetData(level, infos^, value);
+
+OnStringValue := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnUdintValue" Id="{6da78496-8544-4657-b08e-2827d4fa091d}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnUdintValue : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: POINTER TO TcJsonLevelInfo;
+	value	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+AdsLogMessage('OnUdintValue');
+
+OnUdintValue := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnUlintValue" Id="{64f3bade-566f-4e6a-bfbb-22a6438df232}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnUlintValue : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: POINTER TO TcJsonLevelInfo;
+	value	: ULINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+AdsLogMessage('OnUlintValue');
+
+OnUlintValue := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="SensorValue1" Id="{1e8bcd68-33e4-4b1a-a586-3867c15c517b}" FolderPath="IDomParserMetaHandler\">
+      <Declaration><![CDATA[
+PROPERTY SensorValue1 : DINT
+]]></Declaration>
+      <Get Name="Get" Id="{db14629a-5fa6-4b4d-90f4-7f1d17389bec}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+SensorValue1 := THIS^._sensorValue1;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="SetData" Id="{a539d8cd-1c3a-45ee-b349-1eb924e60e0f}" FolderPath="Private\">
+      <Declaration><![CDATA[METHOD PRIVATE SetData : HRESULT
+VAR_INPUT
+	level	: UDINT;
+	infos	: TcJsonLevelInfo;
+	value	: STRING;
+END_VAR
+VAR
+  hr : HRESULT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF infos.key^ = 'batteryVoltage' THEN
+  THIS^._batteryVoltage := TO_DINT(value);
+  THIS^._metaData.BatteryVoltage := THIS^._batteryVoltage;
+
+ELSIF infos.key^ = 'voltageUnit' THEN
+  THIS^._voltageUnit := value; 
+  THIS^._metaData.VoltageUnit := THIS^._voltageUnit;
+
+ELSIF infos.key^ = 'clickType' THEN
+  THIS^._clickType := value; 
+  THIS^._metaData.ClickType := THIS^._clickType;
+
+
+ELSIF infos.key^ = 'sensorValue1' THEN
+  THIS^._sensorValue1 := TO_DINT(value);
+  THIS^._metaData.SensorValue1 := THIS^._sensorValue1;
+
+ELSE
+    hr := Tc3_Module.E_FAIL;
+  END_IF
+
+SetData := hr;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="TcAddRef" Id="{e2d3c1ee-a17a-466d-82a9-dd8d2057c084}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+{warning 'Methodenimplementierung hinzufügen'}
+METHOD TcAddRef : UDINT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="TcQueryInterface" Id="{637d7084-0b8a-4ad3-9ffd-3d9da143c148}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+{warning 'Methodenimplementierung hinzufügen'}
+METHOD TcQueryInterface : HRESULT
+VAR_INPUT
+	iid	: REFERENCE TO IID;
+	pipItf	: POINTER TO PVOID;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="TcRelease" Id="{172554f5-e7b9-4801-8e64-e6cdd399be48}" FolderPath="ITcJsonSaxValues\">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+{warning 'Methodenimplementierung hinzufügen'}
+METHOD TcRelease : UDINT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="VoltageUnit" Id="{95081313-6e20-4bd0-b305-26084c95b26c}" FolderPath="IDomParserMetaHandler\">
+      <Declaration><![CDATA[
+PROPERTY VoltageUnit : STRING
+]]></Declaration>
+      <Get Name="Get" Id="{c2c639c3-484e-4aaa-995d-95e85cbe6d0a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+VoltageUnit := THIS^._voltageUnit;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="Globale_Kamera_Variablen" Id="{ca53129f-8e27-42cc-bd54-6554f76c8e79}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	//TestVariablen
+	bStopStepPrismaDetection:BOOL:=FALSE;
+	bStopStepAllLedOn:BOOL:=FALSE;
+	bEinrichtBetrieb:BOOL:=FALSE;
+	bNextStepEinrichtbetrieb:BOOL:=FALSE;
+	bPrismaOk:BOOL:=FALSE;
+	bPrismaNotOK:BOOL:=FALSE;
+	
+	//Kamera aktiv
+	bKameraAktiv:BOOL:=TRUE;
+	
+	//erkannte LEDs
+	bLED_TermXOn		: ARRAY  [1..8] OF LED1904;
+	iDetectedLED			: INT:=0;
+	iStartDetectedLED		: INT:=1;
+	
+	// Color Simularity
+	aRefColor					:	TcVnPoint3_LREAL;
+	aRefColorGreen				:	TcVnPoint3_LREAL	:= [130, 230, 0];
+	aRefColorRed				:	TcVnPoint3_LREAL	:= [255, 255, 255];
+	aRefColorPrismError			:	TcVnPoint3_LREAL	:= [135, 150, 105];
+	fVariance					:	REAL := 0.10;
+	fLuminanceWeight			:	REAL := 0.1;
+	
+	//Threshold
+	fThreshold					:	LREAL;	(* fixed threshold (unused if dynamic thresholding is selected) *)
+	fMaxValue					:	LREAL;	(* maximum pixel value *)
+
+	fThresholdGreenLed			:	LREAL:= 10 ;	(* fixed threshold (unused if dynamic thresholding is selected) *)
+	fMaxValueGreenLed			:	LREAL:= 255;	(* maximum pixel value *)
+	
+	fThresholdRedLed			:	LREAL:= 15 ;	(* fixed threshold (unused if dynamic thresholding is selected) *)
+	fMaxValueRedLed			:	LREAL:= 255;	(* maximum pixel value *)
+	
+	fThreshold_Prism			:	LREAL:= 185 ;	(* fixed threshold (unused if dynamic thresholding is selected) *)
+	fMaxValue_Prism				:	LREAL:= 255;	(* maximum pixel value *)
+	
+	//Konturen zeichnen
+	fAreaMin					: 	REAL:=1200;		(*Mindestfläche der zufindenden LED*)
+	fAreaMax					: 	REAL:=3000;		(*Mindestfläche der zufindenden LED*)
+	fHeightMin					: 	REAL:=30;		(*Mindesthöhe der zufindenden LED*)
+	fHeightMax					: 	REAL:=70;		(*Maximalhöhe der zufindenden LED*)
+	fWidthMax					: 	REAL:=70;		(*Maximalhöhe der zufindenden LED*)
+	
+	fAreaMinLED					: 	REAL:=1200;		(*Mindestfläche der zufindenden LED*)
+	fAreaMaxLED					: 	REAL:=3000;		(*Mindestfläche der zufindenden LED*)
+	fHeightMinLED				: 	REAL:=30;		(*Mindesthöhe der zufindenden LED*)
+	fHeightMaxLED				: 	REAL:=70;		(*Maximalhöhe der zufindenden LED*)
+	fWidthMaxLED				: 	REAL:=90;		(*Maximalhöhe der zufindenden LED*)
+	
+	fAreaMinPrisma				: 	REAL:=450;		(*Mindestfläche der zufindenden LED*)
+	fAreaMaxPrisma				: 	REAL:=900;		(*Mindestfläche der zufindenden LED*)
+	fHeightMinPrisma			: 	REAL:=20;		(*Mindesthöhe der zufindenden LED*)
+	fHeightMaxPrisma			: 	REAL:=70;		(*Maximalhöhe der zufindenden LED*)
+	fWidthMaxPrisma				: 	REAL:=70;		(*Maximalhöhe der zufindenden LED*)
+	
+	// Positionsgrenzen
+	uiLowerPosDeviation:UINT:=10;
+	uiUpperPosDeviation:UINT:=10;
+	aCenterReferenceCoordinatesXY	: ARRAY  [1..8] OF TcVnPoint2_REAL;
+	CenterXPosInput1:REAL:=46;
+	CenterYPosInput1:REAL:=36;
+	CenterXPosInput2:REAL:=119;
+	CenterYPosInput2:REAL:=33;
+	CenterXPosInput3:REAL:=46;
+	CenterYPosInput3:REAL:=87;
+	CenterXPosInput4:REAL:=120;
+	CenterYPosInput4:REAL:=87;
+	CenterXPosDiag1:REAL:=46;
+	CenterYPosDiag1:REAL:=139;
+	CenterXPosDiag2:REAL:=114;
+	CenterYPosDiag2:REAL:=137;
+	CenterXPosDiag3:REAL:=45;
+	CenterYPosDiag3:REAL:=192;
+	CenterXPosDiag4:REAL:=124;
+	CenterYPosDiag4:REAL:=192;
+	
+	// Region of Interrest
+	nXposPrisma			:	UDINT:=1514;
+	nYposPrisma			:	UDINT:=892;
+	nROIWidth			:	UDINT:=170;
+	nROIHeight			:	UDINT:=220;
+
+	
+	// Beleuchtung EL2595
+	bLedOn AT%Q* :BOOL;
+	uiOutputCurrent AT%Q*:UINT;
+	bLedReset AT%Q*:BOOL;
+	bLedWarning AT%I*:BOOL;
+	bLedError AT%I*:BOOL;	
+	uiOutputCurrentEinrichtbertieb:UINT:=300;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

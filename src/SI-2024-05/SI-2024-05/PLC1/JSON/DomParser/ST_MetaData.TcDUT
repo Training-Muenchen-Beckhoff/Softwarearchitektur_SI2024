@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_MetaData" Id="{fc33f874-ae3b-48cc-be60-d9235c23eecf}">
+    <Declaration><![CDATA[TYPE ST_MetaData :
+STRUCT
+  BatteryVoltage : DINT;
+  VoltageUnit : STRING;
+  ClickType : STRING;
+  SensorValue1 : DINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

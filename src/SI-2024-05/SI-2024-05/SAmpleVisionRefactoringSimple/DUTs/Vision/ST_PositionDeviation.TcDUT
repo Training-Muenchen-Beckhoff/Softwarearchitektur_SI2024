@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_PositionDeviation" Id="{def4e211-ec06-4d6c-a077-44ea944f37f2}">
+    <Declaration><![CDATA[TYPE ST_PositionDeviation :
+STRUCT
+  nLower : UINT;
+	nUpper : UINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

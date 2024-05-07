@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_ColorSimularity" Id="{e3b6736d-3d21-4f59-af22-5172db8453ec}">
+    <Declaration><![CDATA[TYPE ST_ColorSimularity :
+STRUCT
+	aRefColor :	TcVnPoint3_LREAL;
+	aRefColorGreen : TcVnPoint3_LREAL	:= [130, 230, 0];
+	aRefColorRed : TcVnPoint3_LREAL	:= [255, 255, 255];
+	aRefColorPrismError :	TcVnPoint3_LREAL := [135, 150, 105];
+	fVariance :	REAL := 0.10;
+	fLuminanceWeight :	REAL := 0.1;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

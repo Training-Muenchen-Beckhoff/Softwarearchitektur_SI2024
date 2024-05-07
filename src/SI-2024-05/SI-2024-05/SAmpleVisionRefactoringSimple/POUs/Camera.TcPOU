@@ -1,0 +1,432 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Camera" Id="{ff5a3c7f-feb8-4c6b-b221-172ea971067a}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Camera
+VAR
+	
+  hr : HRESULT;
+  fbCameraControl :	FB_VN_GevCameraControl; //SymbolInitialization  verlinken!
+	eState : ETcVnCameraState;
+	
+	ipImgIn :	ITcVnImage;
+	ipImgRoi :   ITcVnImage;
+	ipImgRotated :   ITcVnImage;
+	ipImgConvertColorSpace : 	ITcVnImage;
+	ipImgColorSimilarity :	ITcVnImage;
+	ipImgThreshold :	ITcVnImage;
+	ipImgResult :	ITcVnImage;
+	
+	ipImg_Eingangsbild : ITcVnDisplayableImage;
+	ipImg_Ausgeschnitten : ITcVnDisplayableImage;
+	ipImg_Gedreht :	ITcVnDisplayableImage;
+	ipImg_Farbbild : ITcVnDisplayableImage;
+	ipImg_Farbauswahl :	ITcVnDisplayableImage;
+	ipImg_Schwellwert_Farbauswahl :	ITcVnDisplayableImage;
+	ipImg_Ergebnis :	ITcVnDisplayableImage;
+	
+	
+	// Region of Interrest
+	nXposTerm1 : UDINT;
+	nYposTerm1 : UDINT;
+	nROIWidth :	UDINT;
+	nROIHeight : UDINT;
+	
+	// Get Center 
+	aCenterCoordinatesXY : ARRAY[1..8] OF TcVnPoint2_REAL;
+	
+	aWhite : TcVnVector4_LREAL :=	[255,255,255];
+	aBlack : TcVnVector4_LREAL :=	[0,0,0];
+	aRed : TcVnVector4_LREAL := 	[255,0,0];
+	aGreen : TcVnVector4_LREAL :=	[0,255,0];
+	aBlue :	TcVnVector4_LREAL :=	[0,0,255];
+	aOrange :	TcVnVector4_LREAL :=	[255,150,0];
+END_VAR
+
+VAR
+  // Init
+  bInitPositionBoundsDone : BOOL := FALSE;
+  nClearByteLength : UDINT;
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Init
+InitPositionBounds(bInitPositionBoundsDone, Globale_Kamera_Variablen.stPositionBounds);
+
+
+// Position zum Zuschneiden des Prismas aus der Visu übergeben
+nXposTerm1 := Globale_Kamera_Variablen.nXposPrisma;
+nYposTerm1 := Globale_Kamera_Variablen.nYposPrisma;
+nROIWidth := Globale_Kamera_Variablen.nROIWidth;
+nROIHeight := Globale_Kamera_Variablen.nROIHeight;
+
+// Kamera Kontroll Status Maschine
+eState := fbCameraControl.GetState();
+//eState := fbFileSource.GetState();
+
+CASE eState OF
+	
+  TCVN_CS_INITIAL, TCVN_CS_OPENING, TCVN_CS_OPENED, TCVN_CS_STARTACQUISITION:
+    hr := fbCameraControl.StartAcquisition();
+	
+  TCVN_CS_ACQUIRING:
+    hr := fbCameraControl.GetCurrentImage(ipImgIn);
+	
+    IF SUCCEEDED(hr) AND ipImgIn <> 0 THEN
+      VisionLedDetecting(); 		(*Methoden Aufruf*)
+    
+      hr := F_VN_TransformIntoDisplayableImage(ipImgIn, ipImg_Eingangsbild, S_OK);
+      hr := F_VN_TransformIntoDisplayableImage(ipImgRoi, ipImg_Ausgeschnitten, S_OK);
+      hr := F_VN_TransformIntoDisplayableImage(ipImgRotated, ipImg_Gedreht, S_OK);
+      hr := F_VN_TransformIntoDisplayableImage(ipImgConvertColorSpace, ipImg_Farbbild, S_OK);
+      hr := F_VN_TransformIntoDisplayableImage(ipImgColorSimilarity, ipImg_Farbauswahl, S_OK);
+      hr := F_VN_TransformIntoDisplayableImage(ipImgThreshold, ipImg_Schwellwert_Farbauswahl, S_OK);
+      hr := F_VN_TransformIntoDisplayableImage(ipImgResult, ipImg_Ergebnis, S_OK);
+      
+    END_IF
+
+  // Freigeben der Bilder sonst kann es zum Page Fault kommen
+    Tc3_Module.FW_SafeRelease(ADR(ipImgIn));
+    Tc3_Module.FW_SafeRelease(ADR(ipImgRoi));
+    Tc3_Module.FW_SafeRelease(ADR(ipImgRotated));
+    Tc3_Module.FW_SafeRelease(ADR(ipImgConvertColorSpace));
+    Tc3_Module.FW_SafeRelease(ADR(ipImgColorSimilarity));
+    Tc3_Module.FW_SafeRelease(ADR(ipImgThreshold));
+    Tc3_Module.FW_SafeRelease(ADR(ipImgResult));
+
+  TCVN_CS_ERROR:
+    //hr := fbFileSource.Reset();
+    hr := fbCameraControl.Reset();
+    
+  END_CASE
+
+//Positionen der Mittelpunktskoordinaten aus der Visu übernehmen
+GetCenterPositionFromVisu(Globale_Kamera_Variablen.stPositionBounds);
+	
+//Detectiere LEDs	
+//Diag1 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+DetectLedCoordinate(
+    nStartDetectedLED:= Globale_Kamera_Variablen.iStartDetectedLED, 
+    nDetectedLED:= Globale_Kamera_Variablen.iDetectedLED, 
+    nLedNumber:= 5, 
+    aCenterCoordinatesXY:= aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED], 
+    stPositionBounds:= Globale_Kamera_Variablen.stPositionBounds, 
+    Detected:= Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag1);
+
+//Diag2 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+DetectLedCoordinate(
+    nStartDetectedLED:= Globale_Kamera_Variablen.iStartDetectedLED, 
+    nDetectedLED:= Globale_Kamera_Variablen.iDetectedLED, 
+    nLedNumber:= 6, 
+    aCenterCoordinatesXY:= aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED], 
+    stPositionBounds:= Globale_Kamera_Variablen.stPositionBounds, 
+    Detected:= Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag2);
+
+//Diag3 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+DetectLedCoordinate(
+    nStartDetectedLED:= Globale_Kamera_Variablen.iStartDetectedLED, 
+    nDetectedLED:= Globale_Kamera_Variablen.iDetectedLED, 
+    nLedNumber:= 7, 
+    aCenterCoordinatesXY:= aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED], 
+    stPositionBounds:= Globale_Kamera_Variablen.stPositionBounds, 
+    Detected:= Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag3);
+
+
+//Diag4 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+DetectLedCoordinate(
+    nStartDetectedLED:= Globale_Kamera_Variablen.iStartDetectedLED, 
+    nDetectedLED:= Globale_Kamera_Variablen.iDetectedLED, 
+    nLedNumber:= 8, 
+    aCenterCoordinatesXY:= aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED], 
+    stPositionBounds:= Globale_Kamera_Variablen.stPositionBounds, 
+    Detected:= Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag4);
+
+//Input1 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+DetectLedCoordinate(
+    nStartDetectedLED:= Globale_Kamera_Variablen.iStartDetectedLED, 
+    nDetectedLED:= Globale_Kamera_Variablen.iDetectedLED, 
+    nLedNumber:= 1, 
+    aCenterCoordinatesXY:= aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED], 
+    stPositionBounds:= Globale_Kamera_Variablen.stPositionBounds, 
+    Detected:= Globale_Kamera_Variablen.bLED_TermXOn[1].bInput1);
+
+//Input2 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+DetectLedCoordinate(
+    nStartDetectedLED:= Globale_Kamera_Variablen.iStartDetectedLED, 
+    nDetectedLED:= Globale_Kamera_Variablen.iDetectedLED, 
+    nLedNumber:= 2, 
+    aCenterCoordinatesXY:= aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED], 
+    stPositionBounds:= Globale_Kamera_Variablen.stPositionBounds, 
+    Detected:= Globale_Kamera_Variablen.bLED_TermXOn[1].bInput2);
+
+//Input3 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+DetectLedCoordinate(
+    nStartDetectedLED:= Globale_Kamera_Variablen.iStartDetectedLED, 
+    nDetectedLED:= Globale_Kamera_Variablen.iDetectedLED, 
+    nLedNumber:= 3, 
+    aCenterCoordinatesXY:= aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED], 
+    stPositionBounds:= Globale_Kamera_Variablen.stPositionBounds, 
+    Detected:= Globale_Kamera_Variablen.bLED_TermXOn[1].bInput3);
+
+//Input4 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+DetectLedCoordinate(
+    nStartDetectedLED:= Globale_Kamera_Variablen.iStartDetectedLED, 
+    nDetectedLED:= Globale_Kamera_Variablen.iDetectedLED, 
+    nLedNumber:= 4, 
+    aCenterCoordinatesXY:= aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED], 
+    stPositionBounds:= Globale_Kamera_Variablen.stPositionBounds, 
+    Detected:= Globale_Kamera_Variablen.bLED_TermXOn[1].bInput4);
+
+// CenterCoordinatesXY Rücksetzen, damit neuer durchlauf starten kann.
+IF ( Globale_Kamera_Variablen.iStartDetectedLED >= 0) AND (Globale_Kamera_Variablen.iStartDetectedLED < 7)  THEN
+  nClearByteLength := TO_UDINT(TO_INT( SIZEOF(aCenterCoordinatesXY[1])) * (8 - Globale_Kamera_Variablen.iStartDetectedLED));
+  memset(ADR(aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED + 1]), 0, nClearByteLength);
+  END_IF
+  
+  
+  
+  
+]]></ST>
+    </Implementation>
+    <Folder Name="Private" Id="{7a376a92-1568-4511-884e-007451455ffd}" />
+    <Method Name="ClearCenterCorodinatesXY" Id="{a619dbf0-a74a-48f3-8b0f-0920a805cfc4}" FolderPath="Private\">
+      <Declaration><![CDATA[METHOD PRIVATE ClearCenterCorodinatesXY : HRESULT
+VAR_INPUT
+  iStartDetectedLED : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF iStartDetectedLED < 0 OR iStartDetectedLED > 8 THEN
+  ClearCenterCorodinatesXY := Tc3_Module.E_FAIL; //ADSERR_DEVICE_INVALIDPARM
+  RETURN;
+END_IF
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="DetectLedCoordinate" Id="{48000bd3-7b6c-476c-bb7f-d29c32f6624e}" FolderPath="Private\">
+      <Declaration><![CDATA[METHOD PRIVATE DetectLedCoordinate : HRESULT
+VAR_INPUT
+  nStartDetectedLED : INT;
+  nDetectedLED : INT;
+  nLedNumber : INT;
+  aCenterCoordinatesXY : TcVnPoint2_REAL;
+  stPositionBounds : ST_PositionBounds; 
+  Detected : REFERENCE TO BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+Detected := FALSE;	
+
+FOR nStartDetectedLED:=1 TO nDetectedLED BY 1 DO
+  IF aCenterCoordinatesXY[0] > stPositionBounds.aCenterReferenceCoordinatesXY[nLedNumber][0] - stPositionBounds.stDeviation.nLower
+    AND aCenterCoordinatesXY[0] < stPositionBounds.aCenterReferenceCoordinatesXY[nLedNumber][0] + stPositionBounds.stDeviation.nUpper
+    AND aCenterCoordinatesXY[1] > stPositionBounds.aCenterReferenceCoordinatesXY[nLedNumber][1] - stPositionBounds.stDeviation.nLower
+    AND aCenterCoordinatesXY[1] < stPositionBounds.aCenterReferenceCoordinatesXY[nLedNumber][1] + stPositionBounds.stDeviation.nUpper THEN
+      Detected := TRUE;	
+    END_IF
+  END_FOR  
+DetectLedCoordinate := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetCenterPositionFromVisu" Id="{a467553d-cdf1-4579-988a-7880783e7d10}" FolderPath="Private\">
+      <Declaration><![CDATA[METHOD PRIVATE GetCenterPositionFromVisu : HRESULT
+VAR_INPUT
+  stPositionBounds : REFERENCE TO ST_PositionBounds;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+stPositionBounds.aCenterReferenceCoordinatesXY[1][0]:= stPositionBounds.aCenterPosition[1].Input.X;
+stPositionBounds.aCenterReferenceCoordinatesXY[1][1]:= stPositionBounds.aCenterPosition[1].Input.y;
+stPositionBounds.aCenterReferenceCoordinatesXY[2][0]:= stPositionBounds.aCenterPosition[2].Input.X;
+stPositionBounds.aCenterReferenceCoordinatesXY[2][1]:= stPositionBounds.aCenterPosition[2].Input.y;
+stPositionBounds.aCenterReferenceCoordinatesXY[3][0]:= stPositionBounds.aCenterPosition[3].Input.X;
+stPositionBounds.aCenterReferenceCoordinatesXY[3][1]:= stPositionBounds.aCenterPosition[3].Input.y;
+stPositionBounds.aCenterReferenceCoordinatesXY[4][0]:= stPositionBounds.aCenterPosition[4].Input.X;
+stPositionBounds.aCenterReferenceCoordinatesXY[4][1]:= stPositionBounds.aCenterPosition[4].Input.y;
+stPositionBounds.aCenterReferenceCoordinatesXY[5][0]:= stPositionBounds.aCenterPosition[1].Diagnose.X;
+stPositionBounds.aCenterReferenceCoordinatesXY[5][1]:= stPositionBounds.aCenterPosition[1].Diagnose.Y;
+stPositionBounds.aCenterReferenceCoordinatesXY[6][0]:= stPositionBounds.aCenterPosition[2].Diagnose.X;
+stPositionBounds.aCenterReferenceCoordinatesXY[6][1]:= stPositionBounds.aCenterPosition[2].Diagnose.Y;
+stPositionBounds.aCenterReferenceCoordinatesXY[7][0]:= stPositionBounds.aCenterPosition[3].Diagnose.X;
+stPositionBounds.aCenterReferenceCoordinatesXY[7][1]:= stPositionBounds.aCenterPosition[3].Diagnose.Y;
+stPositionBounds.aCenterReferenceCoordinatesXY[8][0]:= stPositionBounds.aCenterPosition[4].Diagnose.X;
+stPositionBounds.aCenterReferenceCoordinatesXY[8][1]:= stPositionBounds.aCenterPosition[4].Diagnose.Y;
+
+GetCenterPositionFromVisu := Tc3_Module.S_OK;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="InitPositionBounds" Id="{66b453dd-025d-41ed-b74a-b32cb9c4b3ae}" FolderPath="Private\">
+      <Declaration><![CDATA[METHOD PRIVATE InitPositionBounds : HRESULT
+VAR_INPUT
+  bInitPositionBoundsDone : BOOL;
+  PositionBounds : REFERENCE TO ST_PositionBounds;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF bInitPositionBoundsDone THEN RETURN; END_IF
+
+PositionBounds.stDeviation.nLower :=10;
+PositionBounds.stDeviation.nUpper :=10;
+PositionBounds.aCenterPosition[1].Input.X := 46;
+PositionBounds.aCenterPosition[1].Input.Y := 36;
+PositionBounds.aCenterPosition[2].Input.X := 119;
+PositionBounds.aCenterPosition[2].Input.Y := 33;
+PositionBounds.aCenterPosition[3].Input.X := 46;
+PositionBounds.aCenterPosition[3].Input.Y := 87;
+PositionBounds.aCenterPosition[4].Input.X := 120;
+PositionBounds.aCenterPosition[4].Input.Y := 87;
+
+PositionBounds.aCenterPosition[1].Diagnose.X := 46;
+PositionBounds.aCenterPosition[1].Diagnose.Y := 139;
+PositionBounds.aCenterPosition[2].Diagnose.X := 114;
+PositionBounds.aCenterPosition[2].Diagnose.Y := 137;
+PositionBounds.aCenterPosition[3].Diagnose.X := 45;
+PositionBounds.aCenterPosition[3].Diagnose.Y := 192;
+PositionBounds.aCenterPosition[4].Diagnose.X := 124;
+PositionBounds.aCenterPosition[4].Diagnose.Y := 192;
+
+bInitPositionBoundsDone := TRUE;
+
+InitPositionBounds  := Tc3_Module.S_OK;
+ ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="VisionLedDetecting" Id="{7c171aaf-42cf-4651-a1ae-76f4d81d388d}">
+      <Declaration><![CDATA[METHOD PRIVATE VisionLedDetecting 
+VAR
+	ipImgWork :	ITcVnImage;
+	
+	ipContours :	ITcVnContainer;
+	ipContour :	ITcVnContainer;
+	ipForwardIterator :	ITcVnForwardIterator;
+	aContourOffset : TcVnPoint;
+	
+	fArea :	LREAL;
+	stRect : TcVnRotatedRectangle;
+	
+	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//	Region of Interrest
+hr := F_VN_CopyImage(ipImgIn, ipImgRoi, hr);
+hr:= F_VN_SetRoi( nXposTerm1, nYposTerm1, nROIWidth, nROIHeight,ipImgRoi ,hr);
+
+// Rotate Image
+hr:=F_VN_RotateImage(ipImgRoi,ipImgRotated,TCVN_RA_180_DEG,hr);
+hr := F_VN_CopyImage(ipImgRotated, ipImgRotated, hr);
+
+// Color Space
+hr := F_VN_ConvertColorSpace(ipImgRotated (*ipImgRoi*)(*ipImgIn*), ipImgWork, ETcVNColorSpaceTransform.TCVN_CST_BAYER_GR_TO_BGR , hr); //TCVN_CST_BAYER_GR_TO_RGB TCVN_CST_BAYER_BG_TO_RGB Liegt daran wie das Bild abgeschnitten wurde
+hr := F_VN_CopyImage(ipImgWork, ipImgConvertColorSpace, hr);
+
+//Color Simularity
+hr := F_VN_ReferenceColorSimilarityExp_TcVnVector3_LREAL(ipImgWork, ipImgWork, Globale_Kamera_variablen.stColorSimularity.aRefColor, Globale_Kamera_Variablen.stColorSimularity.fVariance, Globale_Kamera_Variablen.stColorSimularity.fLuminanceWeight, hr);
+hr := F_VN_CopyImage(ipImgWork, ipImgColorSimilarity, hr);
+
+//Threshold
+hr := Tc3_Vision.F_VN_Threshold(ipImgWork, ipImgWork, Globale_Kamera_Variablen.stThreshold.fThreshold, Globale_Kamera_Variablen.stThreshold.fMaxValue, ETcVnThresholdType.TCVN_TT_BINARY, hr);
+hr := F_VN_CopyImage(ipImgWork, ipImgThreshold, hr);
+
+
+// Contours
+hr := F_VN_FindContoursExp(ipImgWork, ipContours, ETcVnContourRetrievalMode.TCVN_CRM_CONNECTED_COMPONENTS, ETcVnContourApproximationMethod.TCVN_CAM_SIMPLE, aContourOffset,hr);
+
+
+IF SUCCEEDED(hr) AND ipContours <> 0 THEN
+	hr := F_VN_GetForwardIterator(ipContours, ipForwardIterator, hr);
+	
+	// Create an Image to display the results
+	hr := F_VN_ConvertColorSpace(ipImgRotated(*ipImgRoi*) (*ipImgIn*), ipImgWork, ETcVNColorSpaceTransform.TCVN_CST_BAYER_GR_TO_BGR, hr);
+	
+	Globale_Kamera_Variablen.iDetectedLED := 0;
+	
+	WHILE SUCCEEDED(hr) AND ipForwardIterator.CheckIfEnd() = S_FALSE DO
+		
+		hr := F_VN_GetContainer(ipForwardIterator, ipContour, hr);
+		hr := F_VN_IncrementIterator(ipForwardIterator, hr);
+		
+
+		// Finding Criteria to Filter the Contours
+		//============================================
+		
+		// (2) Area and Rectangle Shape		
+		hr := Tc3_Vision.F_VN_ContourArea(ipContour, fArea, hr);
+		IF fArea > Globale_Kamera_Variablen.stConture.fAreaMin THEN 
+			
+			//hr := F_VN_DetermineEnclosingRectangle(ipContour, stRect, hr);
+			hr := Tc3_Vision.F_VN_EnclosingRectangle(ipContour, stRect, hr);
+			
+			Globale_Kamera_Variablen.iDetectedLED:= Globale_Kamera_Variablen.iDetectedLED + 1;// Falls Bild noch nicht zugeschnitten eventuell auskommentieren wegen Exception
+	 
+			aCenterCoordinatesXY[Globale_Kamera_Variablen.iDetectedLED]:=stRect.aCenter; // Falls Bild noch nicht zugeschnitten eventuell auskommentieren wegen Exception
+			
+			// Prüfen ob "Quadratisch" 									
+			IF stRect.stSize.fHeight > Globale_Kamera_Variablen.stConture.fHeightMin AND stRect.stSize.fHeight < Globale_Kamera_Variablen.stConture.fHeightMax AND stRect.stSize.fWidth < Globale_Kamera_Variablen.stConture.fWidthMax THEN 
+				hr := F_VN_DrawContours(ipContour, -1, ipImgWork, aGreen, 2, hr);				
+			ELSIF fArea > Globale_Kamera_Variablen.stConture.fAreaMax THEN
+				hr := F_VN_DrawContours(ipContour, -1, ipImgWork, aOrange, 2, hr);
+			ELSE
+				hr := F_VN_DrawContours(ipContour, -1, ipImgWork, aRed, 2, hr);
+			END_IF
+			
+		END_IF
+					
+		//F_VN_ReleaseInterface(ipContour);
+		Tc3_Module.FW_SafeRelease(ADR(ipContour));
+	END_WHILE
+
+END_IF
+
+hr := F_VN_CopyImage(ipImgWork, ipImgResult, hr);
+
+
+// Release all Interface Pointer
+Tc3_Module.FW_SafeRelease(ADR(ipContours));
+Tc3_Module.FW_SafeRelease(ADR(ipForwardIterator));
+Tc3_Module.FW_SafeRelease(ADR(ipImgWork));
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="Camera">
+      <LineId Id="3" Count="139" />
+      <LineId Id="195" Count="3" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="Camera.ClearCenterCorodinatesXY">
+      <LineId Id="3" Count="5" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="Camera.DetectLedCoordinate">
+      <LineId Id="3" Count="11" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="Camera.GetCenterPositionFromVisu">
+      <LineId Id="3" Count="18" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="Camera.InitPositionBounds">
+      <LineId Id="3" Count="25" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="Camera.VisionLedDetecting">
+      <LineId Id="3" Count="77" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

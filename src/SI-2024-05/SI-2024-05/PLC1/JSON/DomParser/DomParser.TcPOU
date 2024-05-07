@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="DomParser" Id="{2e38708d-cd5d-420b-b3ac-b1dad45000e5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM DomParser
+VAR
+  
+  sMessage : T_MAXSTRING := '{"serialNumber":"123","meta":{"batteryVoltage":"1547", "voltageUnit" : "mV", "clickType":"SINGLE", "sensorValue1" : 3462}}';
+  fbJson : Tc3_JsonXml.FB_JsonDomParser;
+  jsonIterator : SJsonIterator;
+  jsonIteratorEnd : SJsonIterator;
+  
+  jsonDoc : SJsonValue;
+  sName : T_MAXSTRING;
+  jsonValue : SJsonValue;
+  sMetaData : T_MAXSTRING; //{"batteryVoltage":"1547", "voltageUnit" : "mV", "clickType":"SINGLE", "sensorValue1" : 3462} 
+  bGetMetaData : BOOL;
+  
+END_VAR
+VAR
+  // parsen
+ 	fbJsonParser : FB_JsonSaxReader;
+  pDomParserMetaHandler : FB_DomParserMetaHandler;
+  iMetaData : I_DomParserMetaHandler := pDomParserMetaHandler;
+  stMetaData : ST_MetaData;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+// CopyJson()
+
+jsonDoc         := fbJson.ParseDocument(sMessage);
+jsonIterator    := fbJson.MemberBegin(jsonDoc);
+jsonIteratorEnd := fbJson.MemberEnd(jsonDoc);
+
+IF bGetMetaData THEN
+  WHILE jsonIterator <> jsonIteratorEnd DO
+    sName         := fbJson.GetMemberName(jsonIterator);
+    jsonValue     := fbJson.GetMemberValue(jsonIterator);
+    IF sName = 'meta' THEN
+      fbJson.CopyJson(jsonValue, sMetaData, SIZEOF(sMetaData));
+      fbJsonParser.ParseValues(sMetaData, pDomParserMetaHandler);
+      bGetMetaData := FALSE;
+      EXIT;
+      END_IF
+    jsonIterator  := fbJson.NextMember(jsonIterator);
+    END_WHILE
+  END_IF
+
+  stMetaData.BatteryVoltage := iMetaData.MetaData.BatteryVoltage;
+  ]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

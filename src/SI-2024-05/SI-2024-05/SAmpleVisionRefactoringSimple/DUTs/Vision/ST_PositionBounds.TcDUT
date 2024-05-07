@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_PositionBounds" Id="{f5708769-f97a-4479-81d9-38ef8e05e75f}">
+    <Declaration><![CDATA[TYPE ST_PositionBounds :
+STRUCT
+  stDeviation : ST_PositionDeviation; 
+	aCenterReferenceCoordinatesXY	: ARRAY  [1..8] OF TcVnPoint2_REAL;
+  aCenterPosition : ARRAY[1..4] OF ST_CenterPosition;  
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

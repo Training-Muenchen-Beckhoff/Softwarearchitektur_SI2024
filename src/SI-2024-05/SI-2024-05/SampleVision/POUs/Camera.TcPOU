@@ -1,0 +1,443 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Camera" Id="{66c40f03-09ab-43df-a892-3abf3d371648}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Camera
+VAR
+	
+hr							:	HRESULT;
+fbCameraControl				:	FB_VN_GevCameraControl;    //SymbolInitialization  verlinken!
+	eState						:	ETcVnCameraState;
+	
+	ipImgIn						:	ITcVnImage;
+	ipImgRoi					:   ITcVnImage;
+	ipImgRotated				:   ITcVnImage;
+	ipImgConvertColorSpace		: 	ITcVnImage;
+	ipImgColorSimilarity		:	ITcVnImage;
+	ipImgThreshold				:	ITcVnImage;
+	ipImgResult					:	ITcVnImage;
+	
+	ipImg_Eingangsbild				:	ITcVnDisplayableImage;
+	ipImg_Ausgeschnitten			:	ITcVnDisplayableImage;
+	ipImg_Gedreht					:	ITcVnDisplayableImage;
+	ipImg_Farbbild					:	ITcVnDisplayableImage;
+	ipImg_Farbauswahl				:	ITcVnDisplayableImage;
+	ipImg_Schwellwert_Farbauswahl	:	ITcVnDisplayableImage;
+	ipImg_Ergebnis					:	ITcVnDisplayableImage;
+	
+	
+	
+	// Region of Interrest
+	nXposTerm1			:	UDINT;
+	nYposTerm1			:	UDINT;
+	nROIWidth			:	UDINT;
+	nROIHeight			:	UDINT;
+	
+	// Get Center 
+	aCenterCoordinatesXY	: ARRAY  [1..8] OF TcVnPoint2_REAL;
+	
+	aWhite				:	TcVnVector4_LREAL	:=	[255,255,255];
+	aBlack				:	TcVnVector4_LREAL	:=	[0,0,0];
+	aRed				:	TcVnVector4_LREAL	:= 	[255,0,0];
+	aGreen				:	TcVnVector4_LREAL	:=	[0,255,0];
+	aBlue				:	TcVnVector4_LREAL	:=	[0,0,255];
+	aOrange				:	TcVnVector4_LREAL	:=	[255,150,0];
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Position zum Zuschneiden des Prismas aus der Visu übergeben
+nXposTerm1:=Globale_Kamera_Variablen.nXposPrisma;
+nYposTerm1:=Globale_Kamera_Variablen.nYposPrisma;
+nROIWidth:=Globale_Kamera_Variablen.nROIWidth;
+nROIHeight:=Globale_Kamera_Variablen.nROIHeight;
+
+// Kamera Kontroll Status Maschine
+
+eState := fbCameraControl.GetState();
+//eState := fbFileSource.GetState();
+
+CASE eState OF
+	
+TCVN_CS_INITIAL, TCVN_CS_OPENING, TCVN_CS_OPENED, TCVN_CS_STARTACQUISITION:
+	//hr := fbFileSource.StartAcquisition();
+	hr := fbCameraControl.StartAcquisition();
+	
+TCVN_CS_ACQUIRING:
+	
+	//hr := fbFileSource.GetCurrentImage(ipImgIn);
+	hr := fbCameraControl.GetCurrentImage(ipImgIn);
+	
+	IF SUCCEEDED(hr) AND ipImgIn <> 0 THEN
+		
+		Detect_LED(); 		(*Methoden Aufruf*)
+		
+		
+	
+		hr := F_VN_TransformIntoDisplayableImage(ipImgIn, ipImg_Eingangsbild, S_OK);
+		hr := F_VN_TransformIntoDisplayableImage(ipImgRoi, ipImg_Ausgeschnitten, S_OK);
+		hr := F_VN_TransformIntoDisplayableImage(ipImgRotated, ipImg_Gedreht, S_OK);
+		hr := F_VN_TransformIntoDisplayableImage(ipImgConvertColorSpace, ipImg_Farbbild, S_OK);
+		hr := F_VN_TransformIntoDisplayableImage(ipImgColorSimilarity, ipImg_Farbauswahl, S_OK);
+		hr := F_VN_TransformIntoDisplayableImage(ipImgThreshold, ipImg_Schwellwert_Farbauswahl, S_OK);
+		hr := F_VN_TransformIntoDisplayableImage(ipImgResult, ipImg_Ergebnis, S_OK);
+		
+	END_IF
+
+// Freigeben der Bilder sonst kann es zum Page Fault kommen
+//	F_VN_ReleaseInterface(ipImgIn);
+//	F_VN_ReleaseInterface(ipImgRoi);
+//	F_VN_ReleaseInterface(ipImgRotated);
+//	F_VN_ReleaseInterface(ipImgConvertColorSpace);
+//	F_VN_ReleaseInterface(ipImgColorSimilarity);
+//	F_VN_ReleaseInterface(ipImgThreshold);
+//	F_VN_ReleaseInterface(ipImgResult);
+
+	
+	Tc3_Module.FW_SafeRelease(ADR(ipImgIn));
+	Tc3_Module.FW_SafeRelease(ADR(ipImgRoi));
+	Tc3_Module.FW_SafeRelease(ADR(ipImgRotated));
+	Tc3_Module.FW_SafeRelease(ADR(ipImgConvertColorSpace));
+	Tc3_Module.FW_SafeRelease(ADR(ipImgColorSimilarity));
+	Tc3_Module.FW_SafeRelease(ADR(ipImgThreshold));
+	Tc3_Module.FW_SafeRelease(ADR(ipImgResult));
+
+	
+	
+	
+TCVN_CS_ERROR:
+	//hr := fbFileSource.Reset();
+	hr := fbCameraControl.Reset();
+	
+	END_CASE
+
+//Positionen der Mittelpunktskoordinaten aus der Visu übernehmen
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[1][0]:=Globale_Kamera_Variablen.CenterXPosInput1;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[1][1]:=Globale_Kamera_Variablen.CenterYPosInput1;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[2][0]:=Globale_Kamera_Variablen.CenterXPosInput2;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[2][1]:=Globale_Kamera_Variablen.CenterYPosInput2;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[3][0]:=Globale_Kamera_Variablen.CenterXPosInput3;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[3][1]:=Globale_Kamera_Variablen.CenterYPosInput3;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[4][0]:=Globale_Kamera_Variablen.CenterXPosInput4;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[4][1]:=Globale_Kamera_Variablen.CenterYPosInput4;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[5][0]:=Globale_Kamera_Variablen.CenterXPosDiag1;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[5][1]:=Globale_Kamera_Variablen.CenterYPosDiag1;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[6][0]:=Globale_Kamera_Variablen.CenterXPosDiag2;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[6][1]:=Globale_Kamera_Variablen.CenterYPosDiag2;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[7][0]:=Globale_Kamera_Variablen.CenterXPosDiag3;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[7][1]:=Globale_Kamera_Variablen.CenterYPosDiag3;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[8][0]:=Globale_Kamera_Variablen.CenterXPosDiag4;
+Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[8][1]:=Globale_Kamera_Variablen.CenterYPosDiag4;
+
+
+
+	
+//Detectiere LEDs	
+//Diag1 LED
+	Globale_Kamera_Variablen.iStartDetectedLED:=1;
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag1:=FALSE;
+FOR Globale_Kamera_Variablen.iStartDetectedLED:=1 TO Globale_Kamera_Variablen.iDetectedLED BY 1 DO
+	IF aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[5][0] - Globale_Kamera_Variablen.uiLowerPosDeviation  AND 
+		aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[5][0] + Globale_Kamera_Variablen.uiUpperPosDeviation AND 
+		aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[5][1] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+		aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[5][1] + Globale_Kamera_Variablen.uiUpperPosDeviation  THEN
+		Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag1:=TRUE;	
+	END_IF
+END_FOR
+
+
+//Diag2 LED
+	Globale_Kamera_Variablen.iStartDetectedLED:=1;
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag2:=FALSE;
+FOR Globale_Kamera_Variablen.iStartDetectedLED:=1 TO Globale_Kamera_Variablen.iDetectedLED BY 1 DO
+	IF aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[6][0] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+		aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[6][0] + Globale_Kamera_Variablen.uiUpperPosDeviation AND 
+	 	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[6][1] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+		aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[6][1] + Globale_Kamera_Variablen.uiUpperPosDeviation   THEN
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag2:=TRUE;	
+	END_IF
+END_FOR
+
+//Diag3 LED
+	Globale_Kamera_Variablen.iStartDetectedLED:=1;
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag3:=FALSE;
+FOR Globale_Kamera_Variablen.iStartDetectedLED:=1 TO Globale_Kamera_Variablen.iDetectedLED BY 1 DO
+	IF aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] >  Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[7][0] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+		aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[7][0] + Globale_Kamera_Variablen.uiUpperPosDeviation AND
+		aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[7][1] - Globale_Kamera_Variablen.uiLowerPosDeviation AND
+		aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[7][1] + Globale_Kamera_Variablen.uiUpperPosDeviation   THEN
+		Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag3:=TRUE;	
+	END_IF
+END_FOR
+
+
+//Diag4 LED
+	Globale_Kamera_Variablen.iStartDetectedLED:=1;
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag4:=FALSE;
+FOR Globale_Kamera_Variablen.iStartDetectedLED:=1 TO Globale_Kamera_Variablen.iDetectedLED BY 1 DO
+	IF aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[8][0] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[8][0] + Globale_Kamera_Variablen.uiUpperPosDeviation 	AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[8][1] - Globale_Kamera_Variablen.uiLowerPosDeviation 	AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[8][1] + Globale_Kamera_Variablen.uiUpperPosDeviation   THEN
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bDiag4:=TRUE;	
+	END_IF
+END_FOR
+
+//Input1 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+Globale_Kamera_Variablen.bLED_TermXOn[1].bInput1:=FALSE;
+FOR Globale_Kamera_Variablen.iStartDetectedLED:=1 TO Globale_Kamera_Variablen.iDetectedLED BY 1 DO
+	IF aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[1][0] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[1][0] + Globale_Kamera_Variablen.uiUpperPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[1][1] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[1][1] + Globale_Kamera_Variablen.uiUpperPosDeviation   THEN
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bInput1:=TRUE;	
+	END_IF
+END_FOR
+
+
+//Input2 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+Globale_Kamera_Variablen.bLED_TermXOn[1].bInput2:=FALSE;
+FOR Globale_Kamera_Variablen.iStartDetectedLED:=1 TO Globale_Kamera_Variablen.iDetectedLED BY 1 DO
+	IF aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[2][0] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] <  Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[2][0] + Globale_Kamera_Variablen.uiUpperPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[2][1] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[2][1] + Globale_Kamera_Variablen.uiUpperPosDeviation   THEN
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bInput2:=TRUE;	
+	END_IF
+END_FOR
+
+
+//Input3 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+Globale_Kamera_Variablen.bLED_TermXOn[1].bInput3:=FALSE;
+FOR Globale_Kamera_Variablen.iStartDetectedLED:=1 TO Globale_Kamera_Variablen.iDetectedLED BY 1 DO
+	IF aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[3][0] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[3][0] + Globale_Kamera_Variablen.uiUpperPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[3][1] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[3][1] + Globale_Kamera_Variablen.uiUpperPosDeviation   THEN
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bInput3:=TRUE;	
+	END_IF
+END_FOR
+
+
+//Input4 LED
+Globale_Kamera_Variablen.iStartDetectedLED:=1;
+Globale_Kamera_Variablen.bLED_TermXOn[1].bInput4:=FALSE;
+FOR Globale_Kamera_Variablen.iStartDetectedLED:=1 TO Globale_Kamera_Variablen.iDetectedLED BY 1 DO
+	IF aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[4][0] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][0] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[4][0] + Globale_Kamera_Variablen.uiUpperPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] > Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[4][1] - Globale_Kamera_Variablen.uiLowerPosDeviation AND 
+	aCenterCoordinatesXY[Globale_Kamera_Variablen.iStartDetectedLED][1] < Globale_Kamera_Variablen.aCenterReferenceCoordinatesXY[4][1] + Globale_Kamera_Variablen.uiUpperPosDeviation   THEN
+	Globale_Kamera_Variablen.bLED_TermXOn[1].bInput4:=TRUE;
+	END_IF
+END_FOR
+
+
+// Center Rücksetzen, damit neuer durchlauf starten kann.
+IF Globale_Kamera_Variablen.iStartDetectedLED = 0 THEN
+	aCenterCoordinatesXY[1][0]:=0;
+	aCenterCoordinatesXY[1][1]:=0;
+	aCenterCoordinatesXY[2][0]:=0;
+	aCenterCoordinatesXY[2][1]:=0;
+	aCenterCoordinatesXY[3][0]:=0;
+	aCenterCoordinatesXY[3][1]:=0;
+	aCenterCoordinatesXY[4][0]:=0;
+	aCenterCoordinatesXY[4][1]:=0;
+	aCenterCoordinatesXY[5][0]:=0;
+	aCenterCoordinatesXY[5][1]:=0;
+	aCenterCoordinatesXY[6][0]:=0;
+	aCenterCoordinatesXY[6][1]:=0;
+	aCenterCoordinatesXY[7][0]:=0;
+	aCenterCoordinatesXY[7][1]:=0;
+	aCenterCoordinatesXY[8][0]:=0;
+	aCenterCoordinatesXY[8][1]:=0;
+END_IF
+
+IF Globale_Kamera_Variablen.iStartDetectedLED = 1 THEN
+	aCenterCoordinatesXY[2][0]:=0;
+	aCenterCoordinatesXY[2][1]:=0;
+	aCenterCoordinatesXY[3][0]:=0;
+	aCenterCoordinatesXY[3][1]:=0;
+	aCenterCoordinatesXY[4][0]:=0;
+	aCenterCoordinatesXY[4][1]:=0;
+	aCenterCoordinatesXY[5][0]:=0;
+	aCenterCoordinatesXY[5][1]:=0;
+	aCenterCoordinatesXY[6][0]:=0;
+	aCenterCoordinatesXY[6][1]:=0;
+	aCenterCoordinatesXY[7][0]:=0;
+	aCenterCoordinatesXY[7][1]:=0;
+	aCenterCoordinatesXY[8][0]:=0;
+	aCenterCoordinatesXY[8][1]:=0;
+END_IF
+
+IF Globale_Kamera_Variablen.iStartDetectedLED = 2 THEN
+	aCenterCoordinatesXY[3][0]:=0;
+	aCenterCoordinatesXY[3][1]:=0;
+	aCenterCoordinatesXY[4][0]:=0;
+	aCenterCoordinatesXY[4][1]:=0;
+	aCenterCoordinatesXY[5][0]:=0;
+	aCenterCoordinatesXY[5][1]:=0;
+	aCenterCoordinatesXY[6][0]:=0;
+	aCenterCoordinatesXY[6][1]:=0;
+	aCenterCoordinatesXY[7][0]:=0;
+	aCenterCoordinatesXY[7][1]:=0;
+	aCenterCoordinatesXY[8][0]:=0;
+	aCenterCoordinatesXY[8][1]:=0;
+END_IF
+
+IF Globale_Kamera_Variablen.iStartDetectedLED = 3 THEN
+	aCenterCoordinatesXY[4][0]:=0;
+	aCenterCoordinatesXY[4][1]:=0;
+	aCenterCoordinatesXY[5][0]:=0;
+	aCenterCoordinatesXY[5][1]:=0;
+	aCenterCoordinatesXY[6][0]:=0;
+	aCenterCoordinatesXY[6][1]:=0;
+	aCenterCoordinatesXY[7][0]:=0;
+	aCenterCoordinatesXY[7][1]:=0;
+	aCenterCoordinatesXY[8][0]:=0;
+	aCenterCoordinatesXY[8][1]:=0;
+END_IF
+
+IF Globale_Kamera_Variablen.iStartDetectedLED = 4 THEN
+	aCenterCoordinatesXY[5][0]:=0;
+	aCenterCoordinatesXY[5][1]:=0;
+	aCenterCoordinatesXY[6][0]:=0;
+	aCenterCoordinatesXY[6][1]:=0;
+	aCenterCoordinatesXY[7][0]:=0;
+	aCenterCoordinatesXY[7][1]:=0;
+	aCenterCoordinatesXY[8][0]:=0;
+	aCenterCoordinatesXY[8][1]:=0;
+END_IF
+
+IF Globale_Kamera_Variablen.iStartDetectedLED = 5 THEN
+	aCenterCoordinatesXY[6][0]:=0;
+	aCenterCoordinatesXY[6][1]:=0;
+	aCenterCoordinatesXY[7][0]:=0;
+	aCenterCoordinatesXY[7][1]:=0;
+	aCenterCoordinatesXY[8][0]:=0;
+	aCenterCoordinatesXY[8][1]:=0;
+END_IF
+
+IF Globale_Kamera_Variablen.iStartDetectedLED = 6 THEN
+	aCenterCoordinatesXY[7][0]:=0;
+	aCenterCoordinatesXY[7][1]:=0;
+	aCenterCoordinatesXY[8][0]:=0;
+	aCenterCoordinatesXY[8][1]:=0;
+END_IF
+
+IF Globale_Kamera_Variablen.iStartDetectedLED = 7 THEN
+	aCenterCoordinatesXY[8][0]:=0;
+	aCenterCoordinatesXY[8][1]:=0;
+END_IF
+
+]]></ST>
+    </Implementation>
+    <Method Name="Detect_LED" Id="{600dd3b2-67fc-43c0-b9c1-9f29b2e877a6}">
+      <Declaration><![CDATA[METHOD Detect_LED 
+VAR
+	ipImgWork			:	ITcVnImage;
+	
+	ipContours			:	ITcVnContainer;
+	ipContour			:	ITcVnContainer;
+	ipForwardIterator	:	ITcVnForwardIterator;
+	aContourOffset		:	TcVnPoint;
+	
+	fArea				:	LREAL;
+	stRect				:	TcVnRotatedRectangle;
+	
+	
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//	Region of Interrest
+hr := F_VN_CopyImage(ipImgIn, ipImgRoi, hr);
+hr:= F_VN_SetRoi( nXposTerm1, nYposTerm1, nROIWidth, nROIHeight,ipImgRoi ,hr);
+
+// Rotate Image
+hr:=F_VN_RotateImage(ipImgRoi,ipImgRotated,TCVN_RA_180_DEG,hr);
+hr := F_VN_CopyImage(ipImgRotated, ipImgRotated, hr);
+
+// Color Space
+hr := F_VN_ConvertColorSpace(ipImgRotated (*ipImgRoi*)(*ipImgIn*), ipImgWork, ETcVNColorSpaceTransform.TCVN_CST_BAYER_GR_TO_BGR , hr); //TCVN_CST_BAYER_GR_TO_RGB TCVN_CST_BAYER_BG_TO_RGB Liegt daran wie das Bild abgeschnitten wurde
+hr := F_VN_CopyImage(ipImgWork, ipImgConvertColorSpace, hr);
+
+//Color Simularity
+//hr := F_VN_ComputeReferenceColorSimilarityExp_TcVnVector3_LREAL(ipImgWork, ipImgWork, Globale_Kamera_variablen.aRefColor, Globale_Kamera_Variablen.fVariance, Globale_Kamera_Variablen.fLuminanceWeight, hr);
+hr := F_VN_ReferenceColorSimilarityExp_TcVnVector3_LREAL(ipImgWork, ipImgWork, Globale_Kamera_variablen.aRefColor, Globale_Kamera_Variablen.fVariance, Globale_Kamera_Variablen.fLuminanceWeight, hr);
+hr := F_VN_CopyImage(ipImgWork, ipImgColorSimilarity, hr);
+
+//Threshold
+//hr := F_VN_ApplyThreshold(ipImgWork, ipImgWork, Globale_Kamera_Variablen.fThreshold, Globale_Kamera_Variablen.fMaxValue, ETcVnThresholdType.TCVN_TT_BINARY, hr);
+hr := Tc3_Vision.F_VN_Threshold(ipImgWork, ipImgWork, Globale_Kamera_Variablen.fThreshold, Globale_Kamera_Variablen.fMaxValue, ETcVnThresholdType.TCVN_TT_BINARY, hr);
+hr := F_VN_CopyImage(ipImgWork, ipImgThreshold, hr);
+
+
+// Contours
+hr := F_VN_FindContoursExp(ipImgWork, ipContours, ETcVnContourRetrievalMode.TCVN_CRM_CONNECTED_COMPONENTS, ETcVnContourApproximationMethod.TCVN_CAM_SIMPLE, aContourOffset,hr);
+
+
+
+IF SUCCEEDED(hr) AND ipContours <> 0 THEN
+	hr := F_VN_GetForwardIterator(ipContours, ipForwardIterator, hr);
+	
+	// Create an Image to display the results
+	hr := F_VN_ConvertColorSpace(ipImgRotated(*ipImgRoi*) (*ipImgIn*), ipImgWork, ETcVNColorSpaceTransform.TCVN_CST_BAYER_GR_TO_BGR, hr);
+	
+	Globale_Kamera_Variablen.iDetectedLED:=0;
+	
+	WHILE SUCCEEDED(hr) AND ipForwardIterator.CheckIfEnd() = S_FALSE DO
+		
+		hr := F_VN_GetContainer(ipForwardIterator, ipContour, hr);
+		hr := F_VN_IncrementIterator(ipForwardIterator, hr);
+		
+
+		// Finding Criteria to Filter the Contours
+		//============================================
+		
+		// (2) Area and Rectangle Shape		
+		//hr := F_VN_EstimateContourArea(ipContour, fArea, hr);
+		hr := Tc3_Vision.F_VN_ContourArea(ipContour, fArea, hr);
+		IF fArea > Globale_Kamera_Variablen.fAreaMin THEN 
+			
+			//hr := F_VN_DetermineEnclosingRectangle(ipContour, stRect, hr);
+			hr := Tc3_Vision.F_VN_EnclosingRectangle(ipContour, stRect, hr);
+			
+			Globale_Kamera_Variablen.iDetectedLED:=Globale_Kamera_Variablen.iDetectedLED+1;// Falls Bild noch nicht zugeschnitten eventuell auskommentieren wegen Exception
+	 
+			aCenterCoordinatesXY[Globale_Kamera_Variablen.iDetectedLED]:=stRect.aCenter; // Falls Bild noch nicht zugeschnitten eventuell auskommentieren wegen Exception
+
+			
+			// Prüfen ob "Quadratisch" 									
+			IF stRect.stSize.fHeight > Globale_Kamera_Variablen.fHeightMin AND stRect.stSize.fHeight < Globale_Kamera_Variablen.fHeightMax AND stRect.stSize.fWidth < Globale_Kamera_Variablen.fWidthMax THEN 
+				hr := F_VN_DrawContours(ipContour, -1, ipImgWork, aGreen, 2, hr);				
+			ELSIF fArea > Globale_Kamera_Variablen.fAreaMax THEN
+				hr := F_VN_DrawContours(ipContour, -1, ipImgWork, aOrange, 2, hr);
+			ELSE
+				hr := F_VN_DrawContours(ipContour, -1, ipImgWork, aRed, 2, hr);
+			END_IF
+			
+		END_IF
+					
+		//F_VN_ReleaseInterface(ipContour);
+		Tc3_Module.FW_SafeRelease(ADR(ipContour));
+	END_WHILE
+
+END_IF
+
+
+
+hr := F_VN_CopyImage(ipImgWork, ipImgResult, hr);
+
+
+// Release all Interface Pointer
+//F_VN_ReleaseInterface(ipContours);
+//F_VN_ReleaseInterface(ipForwardIterator);
+//F_VN_ReleaseInterface(ipImgWork);
+Tc3_Module.FW_SafeRelease(ADR(ipContours));
+Tc3_Module.FW_SafeRelease(ADR(ipForwardIterator));
+Tc3_Module.FW_SafeRelease(ADR(ipImgWork));
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

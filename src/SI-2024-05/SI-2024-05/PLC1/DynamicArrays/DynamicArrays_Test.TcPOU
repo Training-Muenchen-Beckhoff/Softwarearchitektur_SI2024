@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="DynamicArrays_Test" Id="{d2f2c303-1db2-4d4b-8fa6-abe768fff316}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM DynamicArrays_Test
+VAR
+	bIsEmpty : BOOL;
+  bInsert, bAdd, bAccess, bResize, bClear : BOOL;
+	nDynamicSize : DINT;
+	aArray : ARRAY[0..30] OF T_DataType;
+	tAccess : T_DataType;
+  
+	fbDynamicArray : FB_DynamicArray(10);
+  iDynamicArray : IDynamicArray := fbDynamicArray;
+  
+	nIdx : DINT;
+  
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+// direct Access
+
+//bIsEmpty := fbDynamicArray.IsEmpty();
+//nDynamicSize := fbDynamicArray.Size();
+//fbDynamicArray.Show(aArray);
+
+//IF bInsert THEN
+//	fbDynamicArray.Insert(53476,0); 
+//	FOR nIdx := 1 TO 9 DO 
+//    fbDynamicArray.Insert(TO_ULINT(nIdx * 11), nIdx);
+//    END_FOR
+//	bInsert := FALSE;
+//	END_IF
+
+//IF bAdd THEN
+//  fbDynamicArray.Insert(33,10);
+//  bAdd := FALSE;
+//  END_IF
+
+//IF bAccess THEN
+//  tAccess := fbDynamicArray.Access(2);
+//  bAccess := FALSE;
+//  END_IF
+
+//IF bResize THEN
+//  fbDynamicArray.Resize(5); 
+//  bResize := FALSE;
+//  END_IF
+
+//IF bClear THEN
+//  fbDynamicArray.Clear(); 
+//  bClear := FALSE;
+//  END_IF
+
+  
+  
+  
+// Interface Access
+
+bIsEmpty := iDynamicArray.IsEmpty();
+nDynamicSize := iDynamicArray.Size();
+iDynamicArray.Show(aArray);
+
+IF bInsert THEN
+	iDynamicArray.Insert(53476,0); 
+	FOR nIdx := 1 TO 9 DO 
+    iDynamicArray.Insert(TO_ULINT(nIdx * 11), nIdx);
+    END_FOR
+	bInsert := FALSE;
+	END_IF
+
+IF bAdd THEN
+  iDynamicArray.Insert(33,10);
+  bAdd := FALSE;
+  END_IF
+
+IF bAccess THEN
+  tAccess := iDynamicArray.Access(2);
+  bAccess := FALSE;
+  END_IF
+
+IF bResize THEN
+  iDynamicArray.Resize(5); 
+  bResize := FALSE;
+  END_IF
+
+IF bClear THEN
+  iDynamicArray.Clear(); 
+  bClear := FALSE;
+  END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

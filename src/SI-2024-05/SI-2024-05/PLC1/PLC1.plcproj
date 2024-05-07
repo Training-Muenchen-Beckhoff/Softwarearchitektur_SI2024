@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <FileVersion>1.0.0.0</FileVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{eb83c913-ab24-4f4f-bb43-c9573ea88c47}</ProjectGuid>
+    <SubObjectsSortedByName>True</SubObjectsSortedByName>
+    <DownloadApplicationInfo>true</DownloadApplicationInfo>
+    <WriteProductVersion>true</WriteProductVersion>
+    <GenerateTpy>false</GenerateTpy>
+    <Name>PLC1</Name>
+    <ProgramVersion>3.1.4024.0</ProgramVersion>
+    <Application>{f675e50f-c6d3-4107-a440-4189990bf5c8}</Application>
+    <TypeSystem>{090f0f0c-6a8c-438c-9f4d-549a3c5e8ba5}</TypeSystem>
+    <Implicit_Task_Info>{229c1222-e0fe-4ba3-b03d-1934467516c4}</Implicit_Task_Info>
+    <Implicit_KindOfTask>{d1f45618-d765-41dc-9622-7b7572835fe6}</Implicit_KindOfTask>
+    <Implicit_Jitter_Distribution>{47975ea7-f846-4cfa-9b5d-6c66941ecdce}</Implicit_Jitter_Distribution>
+    <LibraryReferences>{0f203752-2f09-4b87-b5c6-09e9f053d38f}</LibraryReferences>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Common\AdsLogMessage.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DynamicArrays\DUTs\T_DataType.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DynamicArrays\DynamicArray.TcCD">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DynamicArrays\DynamicArrays_Test.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DynamicArrays\FB_DynamicArray.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DynamicArrays\IDynamicArray.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="JSON\DomParser\DomParser.TcCD">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="JSON\DomParser\DomParser.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="JSON\DomParser\FB_DomParserMetaHandler.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="JSON\DomParser\I_DomParserMetaHandler.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="JSON\DomParser\ST_MetaData.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\CLASS\FB_Scalar.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\CLASS\FB_Vector.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\DUTs\E_OperatorError.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\ITFs\Core\I_Object.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\ITFs\Core\I_Operator.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\ITFs\I_Scalar.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\ITFs\I_Vector.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\ITFs\Operators\I_Addition.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\ITFs\Operators\I_Division.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\ITFs\Operators\I_Multiplication.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\ITFs\Operators\I_Subtraction.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\OperatorInterafce.TcCD">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OperatorOverloading\OperatorOverloading_Test.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PlcTask.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\MAIN.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Common" />
+    <Folder Include="DUTs" />
+    <Folder Include="DynamicArrays" />
+    <Folder Include="DynamicArrays\DUTs" />
+    <Folder Include="GVLs" />
+    <Folder Include="JSON" />
+    <Folder Include="JSON\DomParser" />
+    <Folder Include="OperatorOverloading" />
+    <Folder Include="OperatorOverloading\CLASS" />
+    <Folder Include="OperatorOverloading\DUTs" />
+    <Folder Include="OperatorOverloading\ITFs" />
+    <Folder Include="OperatorOverloading\ITFs\Core" />
+    <Folder Include="OperatorOverloading\ITFs\Operators" />
+    <Folder Include="VISUs" />
+    <Folder Include="POUs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PlaceholderReference Include="Tc2_Math">
+      <DefaultResolution>Tc2_Math, * (Beckhoff Automation GmbH)</DefaultResolution>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Standard">
+      <DefaultResolution>Tc2_Standard, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Standard</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_System">
+      <DefaultResolution>Tc2_System, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_System</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_JsonXml">
+      <DefaultResolution>Tc3_JsonXml, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_JsonXml</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_Module">
+      <DefaultResolution>Tc3_Module, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_Module</Namespace>
+    </PlaceholderReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PLC1.tmc">
+      <SubType>Content</SubType>
+    </None>
+  </ItemGroup>
+  <ProjectExtensions>
+    <PlcProjectOptions>
+      <XmlArchive>
+  <Data>
+    <o xml:space="preserve" t="OptionKey">
+      <v n="Name">"&lt;ProjectRoot&gt;"</v>
+      <d n="SubKeys" t="Hashtable" />
+      <d n="Values" t="Hashtable" />
+    </o>
+  </Data>
+  <TypeList>
+    <Type n="Hashtable">System.Collections.Hashtable</Type>
+    <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+    <Type n="String">System.String</Type>
+  </TypeList>
+</XmlArchive>
+    </PlcProjectOptions>
+  </ProjectExtensions>
+</Project>

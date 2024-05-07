@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_ThresholdData" Id="{c205713e-1899-4517-ba78-7654678e8a79}">
+    <Declaration><![CDATA[TYPE ST_ThresholdData :
+STRUCT
+	fThreshold : LREAL;	(* fixed threshold (unused if dynamic thresholding is selected) *)
+	fMaxValue :	LREAL;	(* maximum pixel value *)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

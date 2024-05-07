@@ -1,0 +1,214 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_DynamicArray" Id="{22c3e91c-dedb-43db-adf5-147cc8c5c1cc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK PUBLIC FB_DynamicArray IMPLEMENTS IDynamicArray
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	pData 	: POINTER TO T_DataType;
+	nLength : DINT;
+	tNull	: T_DataType;
+  
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="IDynamicArray" Id="{4a5a6b5c-d84b-4c16-b39f-797b0a0b1bba}" />
+    <Folder Name="Privat" Id="{13dc007f-ddae-4f6c-a701-adfd27685a89}" />
+    <Method Name="Access" Id="{3980b1c7-0aa0-4d04-8f12-28ea7f171809}" FolderPath="IDynamicArray\">
+      <Declaration><![CDATA[METHOD PUBLIC Access : T_DataType
+VAR_INPUT
+	nPosition : DINT;  // Position of element in dynamic array, 0 indexed.
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF nPosition < 0 THEN
+  Access := tNull;
+  RETURN;
+  END_IF
+  
+IF THIS^.IsEmpty() THEN
+  FB_Init(FALSE,FALSE,(nPosition + 1) * 2);
+  END_IF
+  
+IF nPosition >= THIS^.Size() THEN
+  THIS^.Insert(tNull, nPosition);
+  END_IF
+
+Access := THIS^.pData[nPosition];
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Clear" Id="{8f27418d-0d51-4cf6-a51d-9c7da2657f02}" FolderPath="IDynamicArray\">
+      <Declaration><![CDATA[METHOD PUBLIC Clear
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT(THIS^.IsEmpty()) THEN 
+  __DELETE(THIS^.pData); 
+  THIS^.IsEmpty();
+  END_IF
+  ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_exit" Id="{fe68fe44-58be-4cc7-b16a-d3706deb5782}" FolderPath="Privat\">
+      <Declaration><![CDATA[METHOD FB_exit : BOOL
+VAR_INPUT
+	bInCopyCode : BOOL; // if TRUE, the exit method is called for exiting an instance that is copied afterwards (online change).
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+THIS^.Clear();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{ce937f87-4f32-4312-af91-86164dfac0c4}" FolderPath="Privat\">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+	bInitRetains : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+	bInCopyCode : BOOL;  // if TRUE, the instance afterwards gets moved into the copy code (online change)
+	nLength : DINT; 	// Length to initialize array with, default is 10;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+THIS^.Clear();
+IF nLength > 0 THEN
+  THIS^.pData := __NEW(T_DataType, TO_UDINT(nLength));
+  END_IF
+
+THIS^.nLength := nLength;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Insert" Id="{fc9e7619-d075-4815-9fb8-db586892f99a}" FolderPath="IDynamicArray\">
+      <Declaration><![CDATA[METHOD PUBLIC Insert
+VAR_INPUT
+	Data : T_DataType; // Data to insert in dynamic array.
+	nPosition : DINT; // Position to insert data at in the dynamic array, 0 indexed. 
+END_VAR
+VAR
+	pTemp_Data : POINTER TO T_DataType;
+	nTemp_Length : DINT;
+	i : DINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF nPosition < 0 THEN RETURN; END_IF
+
+IF THIS^.IsEmpty() THEN
+  FB_Init(FALSE,FALSE,(nPosition+1)*2);
+  END_IF
+
+IF nPosition < THIS^.Size() THEN 
+	THIS^.pData[nPosition] := Data;
+ELSE 
+	THIS^.Resize((nPosition+1)*2);
+	THIS^.pData[nPosition] := Data;
+	END_IF
+ ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsEmpty" Id="{4e47a388-2867-4f71-b35e-72571d5b036c}" FolderPath="IDynamicArray\">
+      <Declaration><![CDATA[METHOD PUBLIC IsEmpty : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IsEmpty := THIS^.pData = 0;
+IF IsEmpty THEN
+  THIS^.nLength := 0; 
+  END_IF
+ ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Resize" Id="{1534d341-2973-413f-934e-a26df2bd45f4}" FolderPath="IDynamicArray\">
+      <Declaration><![CDATA[METHOD PUBLIC Resize : BOOL
+VAR_INPUT
+	nLength 		: DINT; // New length of dynamic array.
+END_VAR
+VAR_INST
+	pOldData : POINTER TO T_DataType;
+	nOldLength : DINT;
+	nIdx : DINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+IF nLength <= 0 THEN 
+  THIS^.Clear(); 
+  RETURN; 
+  END_IF
+
+IF THIS^.IsEmpty() THEN
+  FB_init(FALSE,FALSE,nLength); 
+  RETURN;
+  END_IF
+  
+IF THIS^.nLength = nLength THEN RETURN; END_IF
+
+// save old Data
+pOldData 		:= THIS^.pData; 
+
+nOldLength 	:= THIS^.nLength;
+THIS^.nLength 	:= nLength;
+
+// allocate new Data
+THIS^.pData := __NEW(T_DataType, TO_UDINT(THIS^.nLength));
+
+// copy old Data
+FOR nIdx := 0 TO TO_DINT(nOldLength-1) DO 
+	IF nIdx > TO_DINT(THIS^.nLength-1) THEN EXIT; END_IF
+ 
+	THIS^.pData[nIdx] := pOldData[nIdx]; 
+	END_FOR
+
+// delete old Data
+__DELETE(pOldData);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Show" Id="{650e4100-1df7-4d3c-9992-bcd2180c9191}" FolderPath="IDynamicArray\">
+      <Declaration><![CDATA[METHOD PUBLIC Show
+VAR_IN_OUT
+	aList : ARRAY[*] OF T_DataType; // Static array to display data in dynamic array.
+END_VAR
+VAR
+	nIdx,nIdxData : DINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+FOR nIdx := LOWER_BOUND(aList, 1) TO UPPER_BOUND(aList, 1) DO
+	IF (nIdxData < TO_DINT(THIS^.Size())) AND NOT(THIS^.IsEmpty()) THEN
+		aList[nIdx] := THIS^.pData[nIdxData];
+		nIdxData := nIdxData + 1; 
+	ELSE 
+		aList[nIdx] := tNull;
+	 	END_IF
+	END_FOR ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Size" Id="{6a2d892a-f4a0-4dfa-b269-565ebb773b48}" FolderPath="IDynamicArray\">
+      <Declaration><![CDATA[METHOD PUBLIC Size : DINT
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//IsEmpty(); 
+Size := THIS^.nLength;
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
